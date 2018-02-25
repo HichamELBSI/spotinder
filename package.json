@@ -1,0 +1,28 @@
+{
+  "main": "node_modules/expo/AppEntry.js",
+  "private": true,
+  "dependencies": {
+    "expo": "^25.0.0",
+    "native-base": "^2.3.8",
+    "react": "16.2.0",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-25.0.0.tar.gz",
+    "react-native-select-multiple": "^1.2.0",
+    "react-navigation": "^1.0.3",
+    "react-redux": "^5.0.6",
+    "redux": "^3.7.2",
+    "redux-thunk": "^2.2.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "8.0.2",
+    "eslint": "^4.12.1",
+    "eslint-config-airbnb": "15.1.0",
+    "eslint-config-prettier": "2.7.0",
+    "eslint-import-resolver-babel-module-alias": "1.5.1",
+    "eslint-plugin-flowtype": "2.39.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-jsx-a11y": "^5.1.1",
+    "eslint-plugin-prettier": "2.3.1",
+    "eslint-plugin-react": "^7.1.0",
+    "prettier": "^1.9.1"
+  }
+}
