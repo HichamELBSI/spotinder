@@ -1,28 +1,15 @@
 import React from 'react';
-import {
-    Body,
-    Title,
-    Right,
-    Header,
-    Container,
-    Button,
-    DeckSwiper,
-    View,
-    Icon,
-    Toast,
-    Left,
-    ActionSheet,
-    Text,
-} from 'native-base';
-import {ImageBackground, AsyncStorage, TouchableOpacity, Linking} from 'react-native';
-import Expo, {Constants} from 'expo';
+import PropTypes from 'prop-types';
+import {Toast, Text} from 'native-base';
+import {View, AsyncStorage} from 'react-native';
+import Expo from 'expo';
 import {NavigationActions} from 'react-navigation';
+import Swiper from 'react-native-deck-swiper';
 
+import SongItem from './songItem';
+import Footer from './footer';
 import fetchData from '../fetchData';
 
-const BUTTONS = ['Ouvrir', 'Annuler'];
-const DESTRUCTIVE_INDEX = 3;
-const CANCEL_INDEX = 4;
 const soundObject = new Expo.Audio.Sound();
 
 const redirectToLogin = NavigationActions.reset({
@@ -37,6 +24,9 @@ const redirectToSetup = NavigationActions.reset({
 });
 
 class App extends React.Component<{}> {
+    static propTypes = {
+        navigation: PropTypes.object.isRequired,
+    };
     state = {
         recommendations: null,
         playPreview: false,
@@ -58,10 +48,7 @@ class App extends React.Component<{}> {
             `https://api.spotify.com/v1/recommendations?market=FR&seed_genres=${forParams}`,
             'GET'
         ).then(data => {
-            if (data.error && data.error.status === 401)
-                AsyncStorage.removeItem('access_token').then(() =>
-                    this.props.navigation.dispatch(redirectToLogin)
-                );
+            if (data.error && data.error.status === 401) this.logout();
             this.setState(() => ({recommendations: data}));
         });
     };
@@ -75,6 +62,19 @@ class App extends React.Component<{}> {
             else this.getRecommendations();
         } else navigation.dispatch(redirectToLogin);
     }
+
+    stop = async () => {
+        try {
+            await soundObject.unloadAsync();
+            if (this.state.playPreview) this.setState(() => ({playPreview: false}));
+        } catch (error) {
+            Toast.show({
+                text: "Une erreur s'est produit. Veuillez vous reconnecter à Spotify !",
+                position: 'bottom',
+                buttonText: 'Okay',
+            });
+        }
+    };
 
     play = async uri => {
         try {
@@ -92,145 +92,80 @@ class App extends React.Component<{}> {
         }
     };
 
-    stop = async () => {
-        try {
-            await soundObject.unloadAsync();
-            if (this.state.playPreview)
-                this.setState(() => ({playPreview: false}));
-        } catch (error) {
-            Toast.show({
-                text: "Une erreur s'est produit. Veuillez vous reconnecter à Spotify !",
-                position: 'bottom',
-                buttonText: 'Okay',
-            });
-        }
-    };
-
-    previewSong = item => {
-        if (item.preview_url) {
-            if (!this.state.playPreview)
-                return (
-                    <TouchableOpacity onPress={() => this.play(item.preview_url)}>
-                        <Icon name="ios-play" style={{fontSize: 72, color: '#2ecc71'}} />
-                    </TouchableOpacity>
-                );
-            return (
-                <TouchableOpacity onPress={() => this.stop()}>
-                    <Icon name="ios-square" style={{fontSize: 72, color: '#34495e'}} />
-                </TouchableOpacity>
-            );
-        }
-        return null;
-    };
-    openWithSpotify = uri => {
-        ActionSheet.show(
-            {
-                options: BUTTONS,
-                cancelButtonIndex: CANCEL_INDEX,
-                destructiveButtonIndex: DESTRUCTIVE_INDEX,
-                title: 'Ouvrir sur spotify ?',
-            },
-            buttonIndex => {
-                if (buttonIndex === 0)
-                    Linking.openURL(uri)
-                        .then(() => {
-                            this.stop();
-                        })
-                        .catch(() =>
-                            Toast.show({
-                                text:
-                                    "Impossible d'ouvrir sur Spotify, assurez vous de l'avoir installé",
-                                position: 'bottom',
-                                buttonText: 'OK',
-                                duration: 3000,
-                                type: 'warning',
-                            })
-                        );
-            }
-        );
-    };
-
     onSwipeLeft = () => {
         this.stop();
     };
     onSwipeRight = item => {
-        fetchData(`https://api.spotify.com/v1/me/tracks?ids=${item.id}`, 'PUT').then(() =>
+        const itemId = this.state.recommendations.tracks[item].id;
+        fetchData(`https://api.spotify.com/v1/me/tracks?ids=${itemId}`, 'PUT').then(() =>
             this.stop()
         );
     };
 
-    setup = () => {
-        const {navigation} = this.props;
-        this.stop();
-        navigation.dispatch(redirectToSetup);
-    };
-
     render() {
         const {recommendations} = this.state;
+        const {navigation} = this.props;
         return (
-            <Container
-                style={{marginTop: Constants.Platform !== 'ios' ? Constants.statusBarHeight : null}}
+            <View
+                style={{
+                    // flex: 1,
+                    alignItems: 'center',
+                }}
             >
-                <Header>
-                    <Left />
-                    <Body>
-                        <Title>Spotinder</Title>
-                    </Body>
-                    <Right>
-                        <Button transparent onPress={this.setup}>
-                            <Icon name="ios-settings" />
-                        </Button>
-                    </Right>
-                </Header>
-                <View style={{padding: 10}}>
-                    {recommendations &&
-                        recommendations.tracks && (
-                            <DeckSwiper
-                                style={{height: 300}}
-                                dataSource={recommendations.tracks}
-                                looping={false}
-                                onSwipeRight={this.onSwipeRight}
-                                onSwipeLeft={this.onSwipeLeft}
-                                renderItem={item => (
-                                    <ImageBackground
-                                        style={{
-                                            width: 300,
-                                            height: 300,
-                                            justifyContent: 'center',
+                {recommendations &&
+                    recommendations.tracks && (
+                        <Swiper
+                            animateOverlayLabelsOpacity
+                            animateCardOpacity
+                            overlayLabels={{
+                                left: {
+                                    title: 'Nope',
+                                    style: {
+                                        label: {
+                                            color: '#ff7675',
+                                        },
+                                        wrapper: {
+                                            flexDirection: 'column',
                                             alignItems: 'center',
-                                        }}
-                                        source={{uri: item.album.images[0].url}}
-                                    >
-                                        {this.previewSong(item)}
-                                        <TouchableOpacity
-                                            onPress={() => this.openWithSpotify(item.uri)}
-                                        >
-                                            <Icon
-                                                name="ios-share-alt"
-                                                style={{fontSize: 72, color: '#2ecc71'}}
-                                            />
-                                        </TouchableOpacity>
-                                    </ImageBackground>
-                                )}
-                            />
-                        )}
-                </View>
-                <View
-                    style={{
-                        flex: 1,
-                        position: 'absolute',
-                        bottom: 10,
-                        left: 10,
-                        right: 10,
-                    }}
-                >
-                    <View style={{paddingTop: 10}}>
-                        <Button full dark onPress={this.logout}>
-                            <Text>Se Déconnecter</Text>
-                        </Button>
-                    </View>
-                </View>
-            </Container>
+                                            justifyContent: 'center',
+                                        },
+                                    },
+                                },
+                                right: {
+                                    title: 'Like',
+                                    style: {
+                                        label: {
+                                            color: '#55efc4',
+                                        },
+                                        wrapper: {
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        },
+                                    },
+                                },
+                            }}
+                            backgroundColor="#2d3436"
+                            cards={recommendations.tracks}
+                            onSwipedRight={this.onSwipeRight}
+                            onSwipedLeft={this.onSwipeLeft}
+                            verticalSwipe={false}
+                            onSwipedAll={() => {
+                                this.getRecommendations();
+                            }}
+                            renderCard={item => (
+                                <SongItem
+                                    stop={this.stop}
+                                    play={this.play}
+                                    isPlay={this.state.playPreview}
+                                    song={item}
+                                />
+                            )}
+                            cardIndex={0}
+                        />
+                    )}
+                <Footer stop={this.stop} navigation={navigation} />
+            </View>
         );
     }
 }

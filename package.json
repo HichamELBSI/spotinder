@@ -6,6 +6,7 @@
     "native-base": "^2.3.8",
     "react": "16.2.0",
     "react-native": "https://github.com/expo/react-native/archive/sdk-25.0.0.tar.gz",
+    "react-native-deck-swiper": "^1.4.8",
     "react-native-select-multiple": "^1.2.0",
     "react-navigation": "^1.0.3",
     "react-redux": "^5.0.6",
