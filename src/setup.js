@@ -1,21 +1,13 @@
 import React from 'react';
-import {
-    Container,
-    Header,
-    CheckBox,
-    Button,
-    Icon,
-    Title,
-    Body,
-    Right,
-    Text,
-    Left,
-} from 'native-base';
+import PropTypes from 'prop-types';
+import {CheckBox, Text} from 'native-base';
 import {AsyncStorage, View} from 'react-native';
 import {NavigationActions} from 'react-navigation';
 import SelectMultiple from 'react-native-select-multiple';
 import {Constants} from 'expo';
 
+import Footer from './footer';
+import Header from './header';
 import fetchData from '../fetchData';
 
 const redirectToLogin = NavigationActions.reset({
@@ -25,6 +17,9 @@ const redirectToLogin = NavigationActions.reset({
 });
 
 class Setup extends React.Component<{}> {
+    static propTypes = {
+        navigation: PropTypes.object.isRequired,
+    };
     state = {
         genres: [],
         selectedGenres: [],
@@ -44,7 +39,8 @@ class Setup extends React.Component<{}> {
 
     async componentWillMount() {
         const selectedGenres = await AsyncStorage.getItem('config');
-        this.setState(() => ({selectedGenres: JSON.parse(selectedGenres)}));
+        if (selectedGenres && selectedGenres.length > 0)
+            this.setState(() => ({selectedGenres: JSON.parse(selectedGenres)}));
         this.getGenres();
     }
 
@@ -64,40 +60,69 @@ class Setup extends React.Component<{}> {
 
     renderCustomCheckBox = selected => (
         <View style={{paddingRight: 20}}>
-            <CheckBox checked={selected} />
+            <CheckBox disabled={this.state.selectedGenres.length < 5} checked={selected} />
         </View>
     );
 
     render() {
         const {genres} = this.state;
+        const {navigation} = this.props;
         const listViewProps = {
             enableEmptySections: true,
         };
+        const isNotValid =
+            this.state.selectedGenres.length < 1 || this.state.selectedGenres.length > 5;
         return (
-            <Container
-                style={{marginTop: Constants.Platform !== 'ios' ? Constants.statusBarHeight : null}}
+            <View
+                style={{
+                    backgroundColor: '#2d3436',
+                    flex: 1,
+                    marginTop: Constants.Platform !== 'ios' ? Constants.statusBarHeight : null,
+                }}
             >
-                <Header>
-                    <Left />
-                    <Body>
-                        <Title>Genres</Title>
-                    </Body>
-                    <Right>
-                        <Button transparent onPress={this.saveConfig}>
-                            <Icon name="arrow-forward" />
-                        </Button>
-                    </Right>
-                </Header>
+                <Header
+                    style={{
+                        height: 50,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    title="Select your genres"
+                />
+                <Text
+                    style={{
+                        textAlign: 'center',
+                        fontSize: 11,
+                        color: isNotValid ? '#ff7675' : 'white',
+                    }}
+                >
+                    {isNotValid
+                        ? 'Please select between 1 and 5 genres !'
+                        : `${this.state.selectedGenres.length} genres selected.`}
+                </Text>
                 <SelectMultiple
-                    customCheckboxSource={selected => this.renderCustomCheckBox(selected)}
-                    renderLabel={genre => <Text>{genre}</Text>}
+                    style={{marginTop: 20, marginBottom: 10}}
+                    rowStyle={{backgroundColor: '#2d3436', borderBottomColor: '#34495e'}}
+                    renderCheckbox={selected => this.renderCustomCheckBox(selected)}
+                    renderLabel={genre => <Text style={{color: 'white'}}>{genre}</Text>}
                     listViewProps={listViewProps}
-                    keyExtractor={(item) => item.label}
+                    keyExtractor={item => item.label}
                     items={genres}
                     selectedItems={this.state.selectedGenres}
                     onSelectionsChange={this.onSelectionsChange}
                 />
-            </Container>
+                <Footer
+                    style={{
+                        width: '100%',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingBottom: 20,
+                    }}
+                    leftButtonLabel="Save"
+                    disableButtonAction={isNotValid}
+                    leftButtonAction={this.saveConfig}
+                    navigation={navigation}
+                />
+            </View>
         );
     }
 }

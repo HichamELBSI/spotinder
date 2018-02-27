@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Icon, Toast, ActionSheet} from 'native-base';
+import {Icon, Toast, ActionSheet, View} from 'native-base';
 import {ImageBackground, TouchableOpacity, Linking} from 'react-native';
 
 const BUTTONS = ['Ouvrir', 'Annuler'];

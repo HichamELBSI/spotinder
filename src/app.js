@@ -1,13 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Toast, Text} from 'native-base';
-import {View, AsyncStorage} from 'react-native';
-import Expo from 'expo';
+import {Toast} from 'native-base';
+import {View, AsyncStorage, Text} from 'react-native';
+import Expo, {Constants} from 'expo';
 import {NavigationActions} from 'react-navigation';
 import Swiper from 'react-native-deck-swiper';
 
 import SongItem from './songItem';
 import Footer from './footer';
+import Header from './header';
 import fetchData from '../fetchData';
 
 const soundObject = new Expo.Audio.Sound();
@@ -69,7 +70,7 @@ class App extends React.Component<{}> {
             if (this.state.playPreview) this.setState(() => ({playPreview: false}));
         } catch (error) {
             Toast.show({
-                text: "Une erreur s'est produit. Veuillez vous reconnecter à Spotify !",
+                text: 'Error. Please reconnect to Spotify and retry !',
                 position: 'bottom',
                 buttonText: 'Okay',
             });
@@ -85,7 +86,7 @@ class App extends React.Component<{}> {
             // Your sound is playing!
         } catch (error) {
             Toast.show({
-                text: "Impossible de lire l'extrait !",
+                text: 'Impossible to play the preview !',
                 position: 'bottom',
                 buttonText: 'Okay',
             });
@@ -102,54 +103,58 @@ class App extends React.Component<{}> {
         );
     };
 
+    config = () => {
+        const {navigation} = this.props;
+        this.stop();
+        navigation.dispatch(redirectToSetup);
+    };
+
     render() {
         const {recommendations} = this.state;
         const {navigation} = this.props;
         return (
             <View
                 style={{
-                    // flex: 1,
+                    backgroundColor: '#2d3436',
+                    flex: 1,
                     alignItems: 'center',
+                    marginTop: Constants.Platform !== 'ios' ? Constants.statusBarHeight : null,
                 }}
             >
+                <Header
+                    style={{
+                        height: 50,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                    title="Spotinder"
+                />
+                <Text
+                    style={{
+                        textAlign: 'center',
+                        fontSize: 11,
+                        color: 'white',
+                    }}
+                >
+                    Swipe right to add the track to your Spotify library or swipe left to continue
+                    to the next track
+                </Text>
                 {recommendations &&
                     recommendations.tracks && (
                         <Swiper
-                            animateOverlayLabelsOpacity
-                            animateCardOpacity
-                            overlayLabels={{
-                                left: {
-                                    title: 'Nope',
-                                    style: {
-                                        label: {
-                                            color: '#ff7675',
-                                        },
-                                        wrapper: {
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        },
-                                    },
-                                },
-                                right: {
-                                    title: 'Like',
-                                    style: {
-                                        label: {
-                                            color: '#55efc4',
-                                        },
-                                        wrapper: {
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        },
-                                    },
-                                },
-                            }}
-                            backgroundColor="#2d3436"
+                            backgroundColor="transparent"
                             cards={recommendations.tracks}
                             onSwipedRight={this.onSwipeRight}
                             onSwipedLeft={this.onSwipeLeft}
+                            showSecondCard={recommendations.tracks.length > 1}
                             verticalSwipe={false}
+                            cardStyle={{
+                                top: 100,
+                                left: 30,
+                                right: 30,
+                                width: 'auto',
+                                height: 300,
+                            }}
                             onSwipedAll={() => {
                                 this.getRecommendations();
                             }}
@@ -164,7 +169,13 @@ class App extends React.Component<{}> {
                             cardIndex={0}
                         />
                     )}
-                <Footer stop={this.stop} navigation={navigation} />
+                <Footer
+                    style={{position: 'absolute', bottom: 20}}
+                    stop={this.stop}
+                    leftButtonLabel="Genres"
+                    leftButtonAction={this.config}
+                    navigation={navigation}
+                />
             </View>
         );
     }

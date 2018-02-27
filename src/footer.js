@@ -9,16 +9,14 @@ const redirectToLogin = NavigationActions.reset({
     key: null,
     actions: [NavigationActions.navigate({routeName: 'Login'})],
 });
-const redirectToSetup = NavigationActions.reset({
-    index: 0,
-    key: null,
-    actions: [NavigationActions.navigate({routeName: 'Setup'})],
-});
 
 class Footer extends React.Component<{}> {
     static propTypes = {
-        stop: PropTypes.func.isRequired,
         navigation: PropTypes.object.isRequired,
+        leftButtonLabel: PropTypes.string.isRequired,
+        leftButtonAction: PropTypes.func.isRequired,
+        style: PropTypes.object,
+        disableButtonAction: PropTypes.bool,
     };
 
     logout = async () => {
@@ -26,20 +24,19 @@ class Footer extends React.Component<{}> {
         AsyncStorage.removeItem('access_token').then(() => navigation.dispatch(redirectToLogin));
     };
 
-    setup = () => {
-        const {navigation} = this.props;
-        this.props.stop();
-        navigation.dispatch(redirectToSetup);
-    };
-
     render() {
+        const {leftButtonAction, leftButtonLabel, style, disableButtonAction} = this.props;
         return (
-            <View style={{flexDirection: 'row', position: 'absolute', bottom: 10}}>
-                <Button transparent light onPress={this.setup}>
-                    <Text>Paramètre</Text>
+            <View style={{flexDirection: 'row', ...style}}>
+                <Button disabled={disableButtonAction} transparent light onPress={leftButtonAction}>
+                    <Text
+                        style={{color: disableButtonAction ? 'rgba(255,255,255,0.3)' : '#F4F4F4'}}
+                    >
+                        {leftButtonLabel}
+                    </Text>
                 </Button>
                 <Button transparent light onPress={this.logout}>
-                    <Text>Se déconnecter</Text>
+                    <Text>Logout</Text>
                 </Button>
             </View>
         );

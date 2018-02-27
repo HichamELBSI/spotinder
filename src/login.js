@@ -63,9 +63,7 @@ class Login extends React.Component {
                         style={{width: 50, height: 50, marginRight: 10}}
                         source={require('../assets/spotify.png')}
                     />
-                    <Text style={{color: 'white', fontWeight: 'bold'}}>
-                        Se connecter avec Spotify
-                    </Text>
+                    <Text style={{color: 'white', fontWeight: 'bold'}}>Connect with Spotify</Text>
                 </TouchableOpacity>
             </View>
         );
